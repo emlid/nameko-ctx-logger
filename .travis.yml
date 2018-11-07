@@ -1,0 +1,10 @@
+language: python
+cache: pip
+python:
+- '3.6'
+install:
+- make init
+script:
+- make style-check
+- make lint
+- make install
