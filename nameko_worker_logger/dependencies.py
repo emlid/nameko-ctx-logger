@@ -40,6 +40,8 @@ from nameko.extensions import DependencyProvider
 def _worker_ctx_to_dict(worker_ctx):
     return {
         'call_id': worker_ctx.call_id,
+        'call_id_parent': worker_ctx.immediate_parent_call_id,
+        'call_id_stack': worker_ctx.call_id_stack,
         'method_name': worker_ctx.entrypoint.method_name,
         'service_name': worker_ctx.service_name
     }
