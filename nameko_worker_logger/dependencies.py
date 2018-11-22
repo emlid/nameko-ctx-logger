@@ -60,12 +60,13 @@ class WorkerLogger(DependencyProvider):
     def get_dependency(self, worker_ctx):
         """Create logger adapter with worker's contextual data."""
         worker_info = {'worker': _worker_ctx_to_dict(worker_ctx)}
-        self.logger = logging.LoggerAdapter(self.logger, extra=worker_info)
-        return self.logger
+        adapter = logging.LoggerAdapter(self.logger, extra=worker_info)
+        return adapter
 
     def worker_result(self, worker_ctx, result=None, exc_info=None):
         """Log exception info, if it is present."""
         if exc_info is None:
             return
-        exception_info = _exception_info_to_dict(exc_info)
-        self.logger.error({'exception_info': exception_info})
+        exception_info = {'exception_info': _exception_info_to_dict(exc_info)}
+        worker_info = {'worker': _worker_ctx_to_dict(worker_ctx)}
+        self.logger.error(exception_info, extra=worker_info)
