@@ -38,18 +38,21 @@ from nameko.extensions import DependencyProvider
 
 
 def _worker_ctx_to_dict(worker_ctx):
-    return {
+    ctx = {
         'call_id': worker_ctx.call_id,
         'call_id_parent': worker_ctx.immediate_parent_call_id,
         'call_id_stack': worker_ctx.call_id_stack,
         'method_name': worker_ctx.entrypoint.method_name,
-        'service_name': worker_ctx.service_name
+        'service_name': worker_ctx.service_name,
+        'data': worker_ctx.data,
     }
+    return {'worker': ctx}
 
 
 def _exception_info_to_dict(exc_info):
     exc_type, msg, traceback = exc_info
-    return {'type': exc_type, 'message': msg, 'traceback': traceback}
+    info = {'type': exc_type, 'message': msg, 'traceback': traceback}
+    return {'exception_info': info}
 
 
 class WorkerLogger(DependencyProvider):
@@ -61,14 +64,20 @@ class WorkerLogger(DependencyProvider):
 
     def get_dependency(self, worker_ctx):
         """Create logger adapter with worker's contextual data."""
-        worker_info = {'worker': _worker_ctx_to_dict(worker_ctx)}
+        worker_info = _worker_ctx_to_dict(worker_ctx)
         adapter = logging.LoggerAdapter(self.logger, extra=worker_info)
         return adapter
 
+    def worker_setup(self, worker_ctx):
+        """Log task info, before starting task execution."""
+        worker_info = _worker_ctx_to_dict(worker_ctx)
+        self.logger.info("worker is started", extra=worker_info)
+
     def worker_result(self, worker_ctx, result=None, exc_info=None):
         """Log exception info, if it is present."""
+        worker_info = _worker_ctx_to_dict(worker_ctx)
         if exc_info is None:
+            self.logger.info("worker successfully finished", extra=worker_info)
             return
-        exception_info = {'exception_info': _exception_info_to_dict(exc_info)}
-        worker_info = {'worker': _worker_ctx_to_dict(worker_ctx)}
+        exception_info = _exception_info_to_dict(exc_info)
         self.logger.error(exception_info, extra=worker_info)
