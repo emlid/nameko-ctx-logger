@@ -33,6 +33,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
+import traceback
 
 from nameko.extensions import DependencyProvider
 
@@ -50,8 +51,9 @@ def _worker_ctx_to_dict(worker_ctx):
 
 
 def _exception_info_to_dict(exc_info):
-    exc_type, msg, traceback = exc_info
-    info = {'type': exc_type, 'message': msg, 'traceback': traceback}
+    exc_type, value, tb = exc_info
+    tb = traceback.format_exception(exc_type, value, tb)
+    info = {'type': exc_type, 'message': value, 'traceback': tb}
     return {'exception_info': info}
 
 
